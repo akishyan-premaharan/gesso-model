@@ -13,6 +13,7 @@ class Neuron {
 
     target: number
 
+
     constructor(inputs: number[], weights: number[], bias: number, target: number) {
         this.bias = bias
         this.weights = weights
@@ -78,7 +79,7 @@ class Neuron {
         this.bias -= learning_rate * gradientBias
 
     }
-    
+
 
 }
 
@@ -231,68 +232,158 @@ function trainModel(dataSet: string[]) {
         )
     }
 
-    for (let epoch = 0; epoch < 10; epoch++) {
+    for (let epoch = 0; epoch < 100; epoch++) {
 
-        let lossArray: number[] = []
 
         for (let sample of dataSet) {
 
-            let sampleArray: number[] = sample.split(",").map(i => parseInt(i)/15);
+            let sampleArray: number[] = sample.split(",").map(i => parseInt(i) / 15);
 
             for (let i = 0; i < sampleArray.length - 4; i++) {
 
                 let inputs = sampleArray.slice(i, i + 4)
-            
+
                 let target = sampleArray[i + 4]
 
-                for (let neuron of network) {
+                if (i <= 64) {
 
-                    neuron.inputs = inputs
-                    neuron.target = target
+                    network[0].inputs = inputs
+                    network[0].target = target
 
-                    let output = neuron.forward() * 15
+                    let output = network[0].forward()
 
-                    // loss is for logging data to see if the model is learning or not
 
-                    let loss = neuron.loss(output)
+                    network[0].backward(output)
 
-                    lossArray.push(loss)
+                } else if (i > 64 && i <= 128) {
 
-                    neuron.backward(output)
+                    network[1].inputs = inputs
+                    network[1].target = target
+
+                    let output = network[1].forward()
+
+
+                    network[1].backward(output)
+
+                } else if (i > 128 && i <= 192) {
+
+                    network[2].inputs = inputs
+                    network[2].target = target
+
+                    let output = network[2].forward()
+
+
+                    network[2].backward(output)
+
+
+                } else {
+
+                    network[3].inputs = inputs
+                    network[3].target = target
+
+                    let output = network[3].forward()
+
+
+                    network[3].backward(output)
 
                 }
+
 
             }
         }
 
-        let sum = 0
 
-        for (let i = 0; i < lossArray.length; i++) {
-
-            sum += lossArray[i]
-        }
-
-        console.log(sum/lossArray.length)
 
     }
 
-    return network 
+    return network
 
 }
 
+/* Generating Images */
+
+function generateImage(Model: Neuron[]) {
+    let dataSet = beachData
+
+    if (Model == beachModel) {
+
+        dataSet = beachData
+
+    } else if (Model == smileyFaceModel) {
+
+        dataSet = smileyFaceData
+
+    } else if (Model == soccerBallModel) {
+
+        dataSet = soccerBallData
+
+    }
+
+    // Seed for introducing variability in generation
+
+    let generated = dataSet[randint(0,dataSet.length - 1)].split(",").slice(0, 4).map(value => parseInt(value) / 15)
+
+    while (generated.length < 256) {
+        const window = generated.slice(-4)
+        const pixelIndex = generated.length - 4
+        let neuronIndex = 0
+        
+        // Dividing up the work for the four neurons
+
+        if (pixelIndex > 128 && pixelIndex <= 192) {
+            neuronIndex = 2
+        } else if (pixelIndex > 192) {
+            neuronIndex = 3
+        } else if (pixelIndex > 64) {
+            neuronIndex = 1
+        }
+
+        const neuron = Model[neuronIndex]
+
+        neuron.inputs = window
+        const next = Math.max(0, Math.min(1, neuron.forward()))
+        generated.push(next)
+    }
+
+    return generated
+}
+
+/** Function to visually display the generated output to the user */
+function display(generatedImage: number[], preview: Sprite) {
+
+    let pixelArray: number[][] = []
+
+    // Creating 2D coordinates for generated values
+
+    for (let y = 0; y < 16; y++) {
+        pixelArray[y] = []
+
+        for (let x = 0; x < 16; x++) {
+            pixelArray[y][x] = generatedImage[y * 16 + x]
+        }
+    }
+
+    // Turning 2D values into pixels
+
+    for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+
+            let color = Math.round(pixelArray[y][x] * 15)
+            preview.image.setPixel(x, y, color)
+        }
+    }
+
+}
 let beachModel = trainModel(beachData)
 
-// part of issue
+let smileyFaceModel = trainModel(smileyFaceData)
 
-/** let smileyFaceModel = trainModel(smileyFaceData)
-
-let soccerBallModel = trainModel(soccerBallData) */
+let soccerBallModel = trainModel(soccerBallData)
 
 // Program Set Up
- 
+
 // Blank Canvas
 
-let generationArray: number[][] = []
 
 scene.setBackgroundColor(1)
 
@@ -317,7 +408,7 @@ let displaySprite = sprites.create(img`
 
 displaySprite.setScale(3, ScaleAnchor.Middle)
 
-displaySprite.setPosition(80,60)
+displaySprite.setPosition(80, 60)
 
 
 while (true) {
@@ -330,23 +421,22 @@ while (true) {
 
     if (story.getLastAnswer() == "Beach") {
 
-        // function
+        display(generateImage(beachModel), displaySprite)
 
-        pause(2000) // allowing a window for user view
+        pause(2000) // allowing a time window for user view
 
     } else if (story.getLastAnswer() == "Smiley Face") {
 
-        // function
-        
-        pause(2000) // allowing a window for user view
+        display(generateImage(smileyFaceModel), displaySprite)
+
+        pause(2000) // allowing a time window for user view
 
     } else {
 
-        // function
+        display(generateImage(soccerBallModel), displaySprite)
 
-        pause(2000)
+        pause(2000) // allowing a time window for user view
 
     }
 
 }
-
