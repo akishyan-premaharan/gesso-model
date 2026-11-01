@@ -10,7 +10,7 @@
 
 ### Intro
 
-Welcome to Gesso, my AI Image Generation model built entirely on the PXT Framework.
+Welcome to Gesso, a basic Image Generation model built entirely on the PXT Framework.
 This project includes:
 
 - 🧠 **A 60 parameter** network of 4x3 independently trained neurons
