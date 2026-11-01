@@ -1,4 +1,4 @@
-# Building AI with Makecode Arcade
+# Gesso - Building AI with Makecode Arcade
 
 
 
@@ -10,7 +10,7 @@
 
 ### Intro
 
-Welcome to my AI Image Generation model built entirely on the PXT Framework.
+Welcome to Gesso, my AI Image Generation model built entirely on the PXT Framework.
 This project includes:
 
 - 🧠 **A 60 parameter** network of 4x3 independently trained neurons
